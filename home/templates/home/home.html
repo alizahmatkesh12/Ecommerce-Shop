@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% load static %}
+{% block extra_headers %}
+<link rel="stylesheet" href="{% static 'home/css/style.css' %}">
+{% endblock extra_headers %}
+{% block content %}
+    {% for category in categories %}
+    <div class="btn-group">
+        <a href="{{ category.get_absolute_url }}" class="btn btn-danger bg-dark text-light">{{ category.name }}</a>
+        <button type="button" class="btn btn-danger dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
+          <span class="visually-hidden">Toggle Dropdown</span>
+        </button>
+        {% for sub in category.scategory.all%}
+        <ul class="dropdown-menu">
+          <li><a class="dropdown-item" href="{{ sub.get_absolute_url }}">{{sub}}</a></li>
+        </ul>
+        {% endfor %}
+      </div>      
+    <a class="card-title btn btn-info" >  </a>
+    {% endfor %}
+<div class="container mt-5">
+    <div class="row">  <!-- اضافه کردن کلاس row -->
+        {% for product in products %}
+            <div class="col-md-3 mb-4">
+                <div class="card h-100" style="display:inline-block;">
+                    {% if product.image %}
+                        <img src="{{ product.image.url }}" class="card-img-top" style="object-fit: cover; height: 200px;">
+                    {% else %}
+                        <!-- display a default image or a message -->
+                        <p>No image available</p>
+                    {% endif %}
+                    <div class="card-header">
+                        Products
+                    </div>
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title"><strong>Title:</strong> {{ product.name }}</h5>
+                        <p class="card-text"><strong>Description:</strong> {{ product.description|truncatewords:2 }}</p>
+                        <p class="card-text"><strong>Category:</strong> {{ product.category }}</p>
+                        <a href="{{ product.get_absolute_url }}" class="btn btn-primary mt-auto">Open</a>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>  <!-- پایان کلاس row -->
+</div>
+{% endblock content %}
+

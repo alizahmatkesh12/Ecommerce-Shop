@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 class="d-flex justify-content-center">Verify Code</h2>
+
+<div class="d-flex justify-content-center">
+    <form action='' method='Post' class='col-md-4' novalidate>
+        {% csrf_token %}
+        {{form.as_p}}
+        <input type='submit' value='Send' class="rounded">
+    </form>
+</div>
+{% endblock content %}
