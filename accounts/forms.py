@@ -16,7 +16,7 @@ class UserCreationFrom(forms.ModelForm):
     
     class Meta:
         model = User
-        fields = ["phone_number", "email", "full_name"]
+        fields = ["phone_number", "email", "username"]
         
         
     def clean_password2(self):
@@ -40,13 +40,13 @@ class UserChangeForm(forms.ModelForm):
     
     class Meta:
         model = User
-        fields = ["phone_number", "email", "full_name", "password", "is_active", "is_admin", "last_login"]
+        fields = ["phone_number", "email", "username", "password", "is_active", "is_admin", "last_login"]
         
         
         
 class UserRegistrationForm(forms.Form):
     email = forms.EmailField()
-    full_name = forms.CharField(label="Full Name", max_length=255)
+    username = forms.CharField(label="Full Name", max_length=255)
     phone = forms.CharField(max_length=11)
     password = forms.CharField(widget=forms.PasswordInput)
 
