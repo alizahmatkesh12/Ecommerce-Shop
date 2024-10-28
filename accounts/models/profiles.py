@@ -3,15 +3,15 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.contrib.auth import get_user_model
 
-from .base import BaseModel
+
+from accounts.models.base import TimeStampedModel
 
 
 
-class Profile(BaseModel):
+class Profile(TimeStampedModel):
     """
     Profile class for each user which is being created to hold the information
     """
-
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name="profile")
     first_name = models.CharField(max_length=250)
     last_name = models.CharField(max_length=250)
@@ -20,7 +20,7 @@ class Profile(BaseModel):
 
     def __str__(self):
         return self.user.email
-    
+
 
 
 @receiver(post_save, sender=get_user_model())

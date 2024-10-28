@@ -1,19 +1,23 @@
 from django.shortcuts import render, redirect
 from django.views import View
-from .forms import UserRegistrationForm, VerifyCodeForm, UserLoginForm
-import random
-from utils import send_otp_code
-from .models import OtpCode, User
 from django.contrib import messages
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.hashers import make_password
+
+from accounts.forms import UserRegistrationForm, VerifyCodeForm, UserLoginForm
+from accounts.models import OtpCode, User
+from accounts.utils import send_otp_code
+
+import random
+
 
 class UserRegisterView(View):
     form_class = UserRegistrationForm
     template_name = 'accounts/register.html'
     
     def get(self, request):
-        form = self.form_class
+        form = self.form_class()
         return render(request, self.template_name, {'form':form})
     
     def post(self, request):
@@ -26,20 +30,24 @@ class UserRegisterView(View):
                 'phone_number': form.cleaned_data['phone'],
                 'email': form.cleaned_data['email'],
                 'username': form.cleaned_data['username'],
-                'password': form.cleaned_data['password']
+                'password': make_password(form.cleaned_data['password'])
             }
+            request.session.set_expiry(300)
+            
             messages.success(request, "We send you a code", 'success')
             return redirect('accounts:verify_code')
         return render(request, self.template_name, {'form': form})
-    
-    
-    
+
+
 class UserRegisterVerifyCodeView(View):
     form_class = VerifyCodeForm
     
     def get(self, request):
-        form = self.form_class
-        return render(request, 'accounts/verify.html', {"form": form})
+        form = self.form_class()
+        return render(request,
+            'accounts/verify.html',
+                {"form": form}
+        )
         
     
     def post(self, request):
@@ -53,12 +61,13 @@ class UserRegisterVerifyCodeView(View):
         if form.is_valid():
             cd = form.cleaned_data
             if cd['code'] == code_instance.code:
-                User.objects.create(phone_number = user_session['phone_number'],
-                                    email = user_session['email'],
-                                    username = user_session['username'],
-                                    password = user_session['password'],
-                )
+                user = User.objects.create(phone_number = user_session['phone_number'],
+                                        email = user_session['email'],
+                                        username = user_session['username'],
+                                        password = user_session['password'],
+                                        )
                 code_instance.delete()
+                login(request, user)
                 messages.success(request, "you registered", 'success')
                 return redirect('home:home')
             else:
@@ -66,7 +75,6 @@ class UserRegisterVerifyCodeView(View):
                 return redirect('accounts:verify_code')
         return redirect('home:home')
     
-
 
 class UserLogoutView(LoginRequiredMixin, View):
     def get(self, request):
@@ -80,7 +88,7 @@ class UserLoginView(View):
     template_name = 'accounts/login.html'
     
     def get(self, request):
-        form = self.form_class
+        form = self.form_class()
         return render(request, self.template_name, {'form': form})
     
     def post(self, request):
