@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<div class="container">
+    <div class="container">
+        <h1>پروفایل کاربر</h1>
+        
+        <div class="profile-info">
+            <h2>{{ profile.first_name }} {{ profile.last_name }}</h2>
+            {% if profile.image %}
+                <img src="{{ profile.image.url }}" alt="{{ profile.first_name }} {{ profile.last_name }}" class="profile-image">
+            {% else %}
+                <img src="{% static 'img/default-avatar.png' %}" alt="Default Avatar" class="profile-image">
+            {% endif %}
+            <p><strong>درباره:</strong> {{ profile.about }}</p>
+        </div>
+        
+        <div class="actions">
+            <a href="{% url 'accounts:profile_edit' user_id=profile.user.id %}" class="btn btn-primary">ویرایش پروفایل</a>
+            <a href="{% url 'home:home' %}" class="btn btn-secondary">بازگشت به صفحه اصلی</a>
+        </div>
+    </div>
+
+{% endblock %}

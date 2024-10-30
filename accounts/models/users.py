@@ -3,8 +3,8 @@ from django.contrib.auth.models import  AbstractBaseUser, PermissionsMixin
 from ..managers import UserManager
 from accounts.models.base import TimeStampedModel
 
-from django.utils import timezone
 import uuid
+
 
 class User(TimeStampedModel, AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(
@@ -26,12 +26,17 @@ class User(TimeStampedModel, AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True)
     is_admin = models.BooleanField(default=False)
     
+    
     objects = UserManager()
     
     USERNAME_FIELD = "phone_number"
-    REQUIRED_FIELDS = ["email", "username"]
+    REQUIRED_FIELDS = ["email"]
     
-    def __str__(self) -> str:
+    class Meta:
+        verbose_name = "User "
+        verbose_name_plural = "Users"
+    
+    def __str__(self):
         return self.email
     
     @property

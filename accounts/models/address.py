@@ -13,7 +13,7 @@ class Address(TimeStampedModel):
     city = models.CharField(max_length=100, blank=False, null=False)
     street_address = models.CharField(max_length=250, blank=False, null=False)
     postal_code = models.CharField(max_length=20, blank=True, null=True)
-    phone_number = models.CharField(blank=True, null=True)
+    phone_number = models.CharField(max_length=15, blank=True, null=True)
     building_number = models.IntegerField(
         blank=True, null=True, validators=[MinValueValidator(1)]
     )
@@ -21,5 +21,9 @@ class Address(TimeStampedModel):
         blank=True, null=True, validators=[MinValueValidator(1)]
     )
     
-    def __str__(self) -> str:
-        return f"{self.user}"
+    class Meta:
+        verbose_name = "Address"
+        verbose_name_plural = "Addresses"
+    
+    def __str__(self):
+        return f"{self.user} - {self.street_address}, {self.city}"

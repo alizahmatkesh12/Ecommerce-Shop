@@ -2,7 +2,9 @@ from django import forms
 from django.contrib.auth.forms import ReadOnlyPasswordHashField
 from django.core.exceptions import ValidationError
 
-from accounts.models import User, OtpCode
+from accounts.models.users import User
+from accounts.models.otp_code import OtpCode
+from accounts.models.profiles import Profile
 
 
 class UserCreationFrom(forms.ModelForm):
@@ -77,3 +79,8 @@ class UserLoginForm(forms.Form):
     phone = forms.CharField(max_length=11)
     password = forms.CharField(widget=forms.PasswordInput)
     
+
+class UserProfileForm(forms.ModelForm):
+    class Meta:
+        model = Profile
+        fields = ['first_name', 'last_name', 'image', 'about']

@@ -7,12 +7,14 @@ from django.contrib.auth import get_user_model
 from accounts.models.base import TimeStampedModel
 
 
-
 class Profile(TimeStampedModel):
     """
     Profile class for each user which is being created to hold the information
     """
-    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name="profile")
+
+    user = models.OneToOneField(
+        get_user_model(), on_delete=models.CASCADE, related_name="profile"
+    )
     first_name = models.CharField(max_length=250)
     last_name = models.CharField(max_length=250)
     image = models.ImageField(blank=True, null=True)
@@ -22,11 +24,12 @@ class Profile(TimeStampedModel):
         return self.user.email
 
 
-
 @receiver(post_save, sender=get_user_model())
-def save_profile(sender, instance, created, **kwargs):
+def manage_profile(sender, instance, created, **kwargs):
     """
-    Signal for post creating a user which activates when a user being created ONLY
+    Signal to create or save the Profile object whenever the User object is created or saved.
     """
     if created:
         Profile.objects.create(user=instance)
+    else:
+        instance.profile.save()
