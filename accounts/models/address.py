@@ -20,10 +20,10 @@ class Address(TimeStampedModel):
     apartment_number = models.IntegerField(
         blank=True, null=True, validators=[MinValueValidator(1)]
     )
-    
+
     class Meta:
         verbose_name = "Address"
         verbose_name_plural = "Addresses"
-    
+
     def __str__(self):
         return f"{self.user} - {self.street_address}, {self.city}"

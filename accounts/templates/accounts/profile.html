@@ -16,9 +16,18 @@
         </div>
         
         <div class="actions">
-            <a href="{% url 'accounts:profile_edit' user_id=profile.user.id %}" class="btn btn-primary">ویرایش پروفایل</a>
+            <a href="{% url 'accounts:profile_edit' %}" class="btn btn-primary">ویرایش پروفایل</a>
             <a href="{% url 'home:home' %}" class="btn btn-secondary">بازگشت به صفحه اصلی</a>
         </div>
     </div>
+</div>
+
+<style>
+    .profile-image {
+        max-width: 150px;  /* You can adjust this value */
+        height: auto;
+        border-radius: 50%; /* Optional: makes the image circular */
+    }
+</style>
 
 {% endblock %}

@@ -6,9 +6,8 @@
   <button type="submit" class="btn btn-success">ذخیره تغییرات</button>
 </form>
 
-<a
-  href="{% url 'accounts:user_profile' user_id=user_id %}"
-  class="btn btn-secondary"
-  >بازگشت به پروفایل</a
->
+<a href="{% url 'accounts:user_profile' user_id=request.user.id %}" class="btn btn-secondary">
+  بازگشت به پروفایل
+</a>
+
 {% endblock %}

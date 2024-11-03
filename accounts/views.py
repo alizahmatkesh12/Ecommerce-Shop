@@ -9,12 +9,12 @@ from accounts.forms import (
     UserRegistrationForm,
     VerifyCodeForm,
     UserLoginForm,
-    UserProfileForm,
+    EditProfileForm,
 )
+
 from accounts.models.users import User
 from accounts.models.otp_code import OtpCode
 from accounts.models.profiles import Profile
-
 
 from accounts.utils import send_otp_code
 
@@ -58,8 +58,17 @@ class UserRegisterVerifyCodeView(View):
         return render(request, "accounts/verify.html", {"form": form})
 
     def post(self, request):
-        user_session = request.session["user_registration_info"]
-        code_instance = OtpCode.objects.get(phone_number=user_session["phone_number"])
+        user_session = request.session.get("user_registration_info")
+        if not user_session:
+            messages.error(request, "Session expired. Please try registering again.")
+            return redirect("accounts:user_register")
+        try:
+            code_instance = OtpCode.objects.get(
+                phone_number=user_session["phone_number"]
+            )
+        except OtpCode.DoesNotExist:
+            messages.error(request, "OTP code not found. Please request a new code.")
+            return redirect("accounts:user_register")
         if not code_instance.is_valid():
             code_instance.delete()
             messages.error(request, "Your code has expired", "danger")
@@ -118,188 +127,43 @@ class UserProfileView(LoginRequiredMixin, View):
     """
     Provides a form for users to update their profile information.
     """
+
     template_name = "accounts/profile.html"
+
     def get(self, request, user_id):
         profile = get_object_or_404(Profile, pk=user_id)
 
         if request.user != profile.user:
-            messages.error("....")
+            messages.error(request, "You do not have permission to view this profile.")
             return redirect("home:home")
+
         return render(request, self.template_name, {"profile": profile})
 
-class ProfileEditView(LoginRequiredMixin, View):
-    template_name = "accounts/edit_profile.html"
-    def get(self, request, user_id=None):
-        profile = get_object_or_404(Profile, user_id=user_id or request.user.id)
-        form = UserProfileForm(instance=profile)
-        return render(
-            request, self.template_name, {"form": form, "user_id": profile.user.id}
-        )
 
-    def post(self, request, user_id=None):
+class ProfileEditView(LoginRequiredMixin, View):
+    """
+    Provides a form for users to edit their profile information.
+    """
+
+    template_name = "accounts/edit_profile.html"
+    form_class = EditProfileForm
+
+    def get(self, request):
+        profile = get_object_or_404(Profile, user=request.user.id)
+        form = self.form_class(instance=profile)
+        return render(request, self.template_name, {"form": form})
+
+    def post(self, request):
         profile = get_object_or_404(Profile, user=request.user)
-        form = UserProfileForm(request.POST, instance=profile)
+        form = self.form_class(request.POST, request.FILES, instance=profile)
+
         if form.is_valid():
             form.save()
+            messages.success(request, "Your profile has been updated successfully.")
             return redirect("accounts:user_profile", user_id=request.user.id)
-        return render(
-            request, self.template_name, {"form": form, "user_id": profile.user.id}
+
+        messages.error(
+            request,
+            "There was an error updating your profile. Please correct the errors below.",
         )
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# class UserLoginVerifyCodeView(View):
-#     form_class = VerifyCodeForm
-#     template_name = 'accounts/login.html'
-
-
-#     def get(self, request):
-#         form = self.form_class
-#         return render(request, 'accounts/verify.html', {'form': form})
-
-#     def post(self, request):
-#         form = self.form_class(request.Post)
-#         if form.is_valid():
-#             cd = form .cleaned_data
-#             user = authenticate(request, phone_number = cd['phone'], password= cd['password'])
-#             if user is not None:
-#                 login(request, user)
-#                 messages.success(request, 'Login was successfully', 'success')
-#                 return redirect('home:home')
-#             messages.error(request, 'PhoneNumber or Password was wrong', 'danger')
-#         return render(request, self.template_name, {'form':form})
-
-
-# class UserLoginView(View):
-#     form_class = UserLoginForm
-#     template_name = 'accounts/login.html'
-
-#     def get(self, request):
-#         form = self.form_class
-#         return render(request, self.template_name, {'form': form})
-
-
-#     def post(self, request):
-#         form = self.form_class(request.POST)
-#         if form.is_valid():
-#             random_code = random.randint(1000, 9999)
-#             send_otp_code(form.cleaned_data['phone'], random_code)
-#             OtpCode.objects.create(phone_number=form.cleaned_data['phone'], code=random_code)
-#             try:
-#                 user = User.objects.get(phone_number = form.cleaned_data['phone'])
-#                 if user.check_password(form.cleaned_data['password']):
-#                     request.session['user_login_info'] = {
-#                         'phone_number': form.cleaned_data['phone'],
-#                         'email': user.email,
-#                         'full_name': user.full_name,
-#                         'password': form.cleaned_data['password']
-#                     }
-#                     messages.success(request, "We send you a code", 'success')
-#                     return redirect('accounts:verify_code')
-#                 else:
-#                     messages.error(request, "Your password is wrong", 'dange')
-#                     return redirect('accounts:verify_code')
-#             except User.DoesNotExist:
-#                 messages.error(request, "User does not exist", 'danger')
-#                 return redirect('accounts:login')
-#         return render(request, self.template_name, {'form': form})
-
-# user_session =request.session['user_login_info']
-# code_instance = OtpCode.objects.get(phone_number=user_session['phone_number'])
-# if not code_instance.is_valid():
-#     code_instance.delete()
-#     messages.error(request, "Your code has expired", 'danger')
-#     return redirect('accounts:login')
-# form = self.form_class(request.POST)
-# if form.is_valid():
-#     cd = form.cleaned_data
-#     if cd['code'] == code_instance.code:
-#         user = User.objects.get(phone_number=user_session['phone_number'])
-#         if user.check_password(user_session['password']):
-#         # user = authenticate(request, phone_number=user_session['phone_number'], password = user_session['password'])
-#         # if user is not None:
-#             login(request, user)
-#             code_instance.delete()
-#             messages.success(request, "You logged in successfully", 'success')
-#             return redirect('home:home')
-#     else:
-#         messages.error(request, "Your code is wrong", 'danger')
-#         return redirect('accounts:login')
-# return redirect('home:home')
-
-# # def post(self, request):
-# #     user_session =request.session['user_login_info']
-# #     code_instance = OtpCode.objects.get(phone_number=user_session['phone_number'])
-# #     if not code_instance.is_valid():
-# #         code_instance.delete()
-# #         messages.error(request, "Your code has expired", 'danger')
-# #         return redirect('accounts:login')
-# #     form = self.form_class(request.POST)
-# #     if form.is_valid():
-# #         cd = form.cleaned_data
-# #         if cd['code'] == code_instance.code:
-# #             # user = User.objects.get(phone_number=user_session['phone_number'])
-# #             # if user.check_password(user_session['password']):
-# #             user = authenticate(request, phone_number=user_session['phone_number'], password = user_session['password'])
-# #             if user is not None:
-# #                 login(request, user)
-# #                 code_instance.delete()
-# #                 messages.success(request, "You logged in successfully", 'success')
-# #                 return redirect('home:home')
-# #             else:
-# #                 messages.error(request, "Your password is wrong", 'danger')
-# #                 return redirect('accounts:login')
-# #         else:
-# #             messages.error(request, "Your code is wrong", 'danger')
-# #             return redirect('accounts:login')
-# #     return redirect('home:home')
-
-
-# def post(self, request):
-#         user_session = request.session.get('user_login_info')
-#         if not user_session:
-#             messages.error(request, "Session expired. Please login again.", 'danger')
-#             return redirect('accounts:login')
-
-#         form = self.form_class(request.POST)
-#         if form.is_valid():
-#             try:
-#                 code_instance = OtpCode.objects.get(phone_number=user_session['phone_number'])
-#                 if not code_instance.is_valid():
-#                     code_instance.delete()
-#                     messages.error(request, "Your code has expired or is invalid", 'danger')
-#                     return redirect('accounts:login')
-#             except OtpCode.DoesNotExist:
-#                 messages.error(request, "OTP code does not exist", 'danger')
-#                 return redirect('accounts:login')
-
-#             if form.cleaned_data['code'] == code_instance.code:
-#                 user = authenticate(request, phone_number=user_session['phone_number'], password=user_session['password'])
-#                 if user:
-#                     login(request, user)
-#                     code_instance.delete()
-#                     messages.success(request, "You logged in successfully", 'success')
-#                     return redirect('home:home')
-#                 else:
-#                     messages.error(request, "Authentication failed. Please try again.", 'danger')
-#             else:
-#                 messages.error(request, "Your code is wrong", 'danger')
-#         return render(request, 'accounts/verify.html', {'form': form})
+        return render(request, self.template_name, {"form": form})

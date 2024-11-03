@@ -17,7 +17,7 @@ class Profile(TimeStampedModel):
     )
     first_name = models.CharField(max_length=250)
     last_name = models.CharField(max_length=250)
-    image = models.ImageField(blank=True, null=True)
+    image = models.ImageField(upload_to="accounts/", default="default-avatar.png")
     about = models.TextField(blank=True, null=True)
 
     def __str__(self):

@@ -9,10 +9,10 @@ class OtpCode(TimeStampedModel):
     Represents a one-time password (OTP) code associated with a phone number.
     """
     VALIDITY_PERIOD = 60  # seconds
-    
+
     phone_number = models.CharField(max_length=11, unique=True)
     code = models.PositiveSmallIntegerField()
-    
+
     class Meta:
         verbose_name = "OTP Code"
         verbose_name_plural = "OTP Codes"

@@ -80,7 +80,7 @@ class UserLoginForm(forms.Form):
     password = forms.CharField(widget=forms.PasswordInput)
     
 
-class UserProfileForm(forms.ModelForm):
+class EditProfileForm(forms.ModelForm):
     class Meta:
         model = Profile
         fields = ['first_name', 'last_name', 'image', 'about']
