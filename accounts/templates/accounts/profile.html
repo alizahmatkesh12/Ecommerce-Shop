@@ -1,24 +1,95 @@
 {% extends "base.html" %}
 {% load static %}
+
 {% block content %}
-<div class="container">
-    <div class="container">
-        <h1>پروفایل کاربر</h1>
-        
-        <div class="profile-info">
-            <h2>{{ profile.first_name }} {{ profile.last_name }}</h2>
-            {% if profile.image %}
-                <img src="{{ profile.image.url }}" alt="{{ profile.first_name }} {{ profile.last_name }}" class="profile-image">
-            {% else %}
-                <img src="{% static 'img/default-avatar.png' %}" alt="Default Avatar" class="profile-image">
-            {% endif %}
-            <p><strong>درباره:</strong> {{ profile.about }}</p>
+<div class="container mt-5">
+    <h1 class="text-center mb-4">پروفایل کاربر</h1>
+
+    <div class="row">
+        <!-- پروفایل کاربر -->
+        <div class="col-md-4 text-center">
+            <div class="profile-info card shadow-sm p-3 mb-4 rounded">
+                <h2>{{ profile.first_name }} {{ profile.last_name }}</h2>
+                {% if profile.image %}
+                    <img src="{{ profile.image.url }}" alt="{{ profile.first_name }} {{ profile.last_name }}" class="profile-image img-fluid rounded-circle">
+                {% else %}
+                    <img src="{% static 'img/default-avatar.png' %}" alt="Default Avatar" class="profile-image img-fluid rounded-circle">
+                {% endif %}
+                <p class="mt-2"><strong>درباره:</strong> {{ profile.about }}</p>
+            </div>
         </div>
-        
-        <div class="actions">
-            <a href="{% url 'accounts:profile_edit' %}" class="btn btn-primary">ویرایش پروفایل</a>
-            <a href="{% url 'home:home' %}" class="btn btn-secondary">بازگشت به صفحه اصلی</a>
+
+        <!-- آدرس‌ها -->
+        <div class="col-md-8">
+            <div class="address-info card shadow-sm p-3 mb-4 rounded">
+                <h3>آدرس‌ها</h3>
+                
+                {% if address %}
+                    <ul class="list-group">
+                        {% for addr in address|slice:":2" %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center address-item">
+                            <div class="address-details">
+                                <span><strong>شهر:</strong> {{ addr.city }}</span>
+                                <span><strong>آدرس:</strong> {{ addr.street_address }}</span>
+                                <span><strong>کد پستی:</strong> {{ addr.postal_code }}</span>
+                                <span><strong>تلفن:</strong> {{ addr.phone_number }}</span>
+                                <span><strong>شماره ساختمان:</strong> {{ addr.building_number }}</span>
+                                <span><strong>شماره آپارتمان:</strong> {{ addr.apartment_number }}</span>
+                            </div>
+                            <div class="btn-group">
+                                <a href="{% url 'accounts:edit_address' addr.id %}" class="btn btn-warning btn-sm">ویرایش</a>
+                                <a href="{% url 'accounts:delete_address' addr.id %}" class="btn btn-danger btn-sm">حذف</a>
+                            </div>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% if address|length > 2 %}
+                        <a href="#" class="btn btn-link mt-3" data-bs-toggle="collapse" data-bs-target="#more-addresses" aria-expanded="false" aria-controls="more-addresses">مشاهده همه آدرس‌ها</a>
+                        <div class="collapse" id="more-addresses">
+                            <ul class="list-group mt-3">
+                                {% for addr in address|slice:"2:" %}
+                                <li class="list-group-item">
+                                    <span><strong>شهر:</strong> {{ addr.city }}</span>
+                                    <span><strong>آدرس:</strong> {{ addr.street_address }}</span>
+                                    <span><strong>کد پستی:</strong> {{ addr.postal_code }}</span>
+                                    <span><strong>تلفن:</strong> {{ addr.phone_number }}</span>
+                                    <span><strong>شماره ساختمان:</strong> {{ addr.building_number }}</span>
+                                    <span><strong>شماره آپارتمان:</strong> {{ addr.apartment_number }}</span>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <p>آدرسی برای نمایش وجود ندارد.</p>
+                {% endif %}
+                <!-- دکمه اضافه کردن آدرس -->
+                <a href="{% url 'accounts:add-address' %}" class="btn btn-success mt-3">افزودن آدرس</a>
+            </div>
         </div>
+    </div>
+
+    <!-- اطلاعات سفارش -->
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="order-info card shadow-sm p-3 mb-4 rounded">
+                <h3>اطلاعات سفارش</h3>
+                {% if order %}
+                    <p><strong>شماره سفارش:</strong> {{ order.id }}</p>
+                    <p><strong>تاریخ سفارش:</strong> {{ order.created_at }}</p>
+                    <p><strong>آدرس انتخابی:</strong> {{ order.address.city }} - {{ order.address.street_address }}</p>
+                    <p><strong>وضعیت پرداخت:</strong> {% if order.paid %} پرداخت شده {% else %} پرداخت نشده {% endif %}</p>
+                    <a href="{% url 'orders:order_detail' order.id %}" class="btn btn-info">مشاهده جزئیات سفارش</a>
+                {% else %}
+                    <p>سفارشی برای نمایش وجود ندارد.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="actions mt-4 text-center">
+        <a href="{% url 'accounts:profile_edit' %}" class="btn btn-primary">ویرایش پروفایل</a>
+        <a href="{% url 'home:home' %}" class="btn btn-secondary">بازگشت به صفحه اصلی</a>
     </div>
 </div>
 
@@ -27,6 +98,34 @@
         max-width: 150px;  /* You can adjust this value */
         height: auto;
         border-radius: 50%; /* Optional: makes the image circular */
+    }
+    .address-info ul {
+        padding: 0;
+    }
+    .address-info li {
+        padding: 10px 0;
+    }
+    .address-info .btn-group {
+        margin-left: 10px;
+    }
+    .address-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        padding: 10px;
+        border-bottom: 1px solid #ddd;
+    }
+    .address-details span {
+        display: inline-block;
+        margin-right: 10px;
+        line-height: 1.5;
+    }
+    .address-info .collapse {
+        margin-top: 15px;
+    }
+    .order-info p {
+        margin-bottom: 10px;
     }
 </style>
 

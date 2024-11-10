@@ -14,7 +14,7 @@
                 </a>
                 <a class="nav-link" href="{% url 'accounts:user_logout' %}">Logout</a>
                 <a></a>
-            <a class="nav-link" href="{% url 'orders:cart' %}">Cart ({{cart|length}})</a>
+            <a class="nav-link" href="{% url 'orders:cart' %}">Cart ({{cart|length}}, ${{ cart.get_total_price }})</a>
                 {% if request.user.is_admin %}
                     <a class="nav-link" href="{% url 'home:bucket' %}">Bucket</a>
                 {% endif %}

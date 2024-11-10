@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from ..managers import UserManager
-from accounts.models.base import TimeStampedModel
+from accounts.models.abstract_model import TimeStampedModel
 
 import uuid
 

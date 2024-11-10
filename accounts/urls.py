@@ -10,4 +10,7 @@ urlpatterns = [
     path('logout/', views.UserLogoutView.as_view(), name='user_logout'),
     path('profile/<int:user_id>/', views.UserProfileView.as_view(), name='user_profile'),
     path('profile/edit/', views.ProfileEditView.as_view(), name='profile_edit'),
+    path('add-address/', views.AddAddressView.as_view(), name="add-address"),
+    path('address/edit/<int:id>/', views.EditAddressView.as_view(), name='edit_address'),
+    path('address/delete/<int:id>/', views.DeleteAddressView.as_view(), name='delete_address'),
 ]

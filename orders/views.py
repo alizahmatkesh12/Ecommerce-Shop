@@ -1,8 +1,9 @@
 from django.shortcuts import render, get_object_or_404, redirect, HttpResponse
 from django.views import View
+from django.contrib import messages
 from .cart import Cart
 from home.models import Product
-from .forms import CartAddForm
+from .forms import CartAddForm,AddressSelectForm
 from django.contrib.auth.mixins import LoginRequiredMixin
 from .models import Order, OrderItem
 import json
@@ -35,108 +36,67 @@ class CartRemoveView(View):
         cart.remove(product)
         return redirect('orders:cart')
             
-
 class OrderDetailView(LoginRequiredMixin, View):
 
     def get(self, request, order_id):
+        # Get the order or return 404 if not found
         order = get_object_or_404(Order, id=order_id)
-        return render(request, 'orders/order.html', {'order': order})
-    
+        
+        # Create the form with initial data for the address
+        form = AddressSelectForm(user=request.user, initial={'address': order.address})
+        
+        # Return the order details view
+        return render(request, 'orders/order.html', {'order': order, 'form': form})
+
+    def post(self, request, order_id):
+        # Get the order or return 404 if not found
+        order = get_object_or_404(Order, id=order_id)
+        
+        # Process the form with POST data
+        form = AddressSelectForm(request.POST)
+        
+        if form.is_valid():
+            address = form.cleaned_data['address']
+            order.address = address
+            order.save()
+            return redirect('home:home', order.id)
+        
+        # If the form is invalid, render the page with errors
+        messages.error(request, "Please correct the errors below.")
+        return render(request, 'orders/order.html', {'order': order, 'form': form})
 
 class OrderCreateView(LoginRequiredMixin, View):
-     
+    
     def get(self, request):
         cart = Cart(request)
-        order = Order.objects.create(user = request.user)
-        for item in cart:
-            OrderItem.objects.create(order=order, product=item['product'], price=item['price'], quantity=item['quantity'])
-        cart.clear()
-        return redirect('orders:order_detail', order.id)
+        form = AddressSelectForm(user=request.user)  
+        return render(request, 'orders/order.html', {'form': form, 'cart': cart})
     
+    def post(self, request):
+        cart = Cart(request) 
+        form = AddressSelectForm(request.POST, data=request.POST)
+        
+        if form.is_valid():
+            address = form.cleaned_data['address']  # This should be an Address object
+            
+            order = Order.objects.create(user=request.user, address=address)  # Ensure address is an Address object
+            for item in cart:
+                OrderItem.objects.create(order=order, product=item['product'], price=item['price'], quantity=item['quantity'])
+            cart.clear()
 
-
-
-
-
-# zarinpal Configuration
-
-MERCHANT = "01010101-0101-0101-0101-010101010101"
-
-ZP_API_REQUEST = "https://sandbox.zarinpal.com/pg/v4/payment/request.json"
-ZP_API_VERIFY = "https://sandbox.zarinpal.com/pg/v4/payment/verify.json"
-ZP_API_STARTPAY = "https://sandbox.zarinpal.com/pg/StartPay/"
-description = "خرید لوازم جانبی"  # Required
-
-CallbackURL = 'http://127.0.0.1:8080/orders/verify/'
-
- 
-
-
-
+            return redirect('orders:order_detail', order.id)
+        
+        return render(request, 'orders/order.html', {'form': form, 'cart': cart})
+    
 class OrderPayView(LoginRequiredMixin, View):
      
     def get(self, request, order_id):
-        order = Order.objects.get(id = order_id)
-        data = {
-        "MerchantID": MERCHANT,
-        "Amount": order.get_total_price(),
-        "Description": description,
-        "Phone": request.user.phone_number,
-        "CallbackURL": CallbackURL,
-        }
-        data = json.dumps(data)
-        headers = {'content-type': 'application/json', 'content-length': str(len(data)) }
-        try:
-            response = requests.post(ZP_API_REQUEST, data=data, headers=headers, timeout=10)
-
-            if response.status_code == 200:
-                response = response.json()
-                if response['Status'] == 100:
-                    return {'status': True, 'url': ZP_API_STARTPAY + str(response['Authority']), 'authority': response['Authority']}
-                else:
-                    return {'status': False, 'code': str(response['Status'])}
-            return response
-        
-        except requests.exceptions.Timeout:
-            return {'status': False, 'code': 'timeout'}
-        except requests.exceptions.ConnectionError:
-            return {'status': False, 'code': 'connection error'}
-        
+        return render(request, "orders/orderPay.html")
+        # TODO Payment Integration here.
+    def post(self, request, order_id):
+        return redirect("home:home")
+        # TODO Payment Integration here.
 
 class OrderVerifyView(LoginRequiredMixin, View):
-	def get(self, request):
-		order_id = request.session['order_pay']['order_id']
-		order = Order.objects.get(id=int(order_id))
-		t_status = request.GET.get('Status')
-		t_authority = request.GET['Authority']
-		if request.GET.get('Status') == 'OK':
-			req_header = {"accept": "application/json",
-						  "content-type": "application/json'"}
-			req_data = {
-				"merchant_id": MERCHANT,
-				"amount": order.get_total_price(),
-				"authority": t_authority
-			}
-			req = requests.post(url=ZP_API_VERIFY, data=json.dumps(req_data), headers=req_header)
-			if len(req.json()['errors']) == 0:
-				t_status = req.json()['data']['code']
-				if t_status == 100:
-					order.paid = True
-					order.save()
-					return HttpResponse('Transaction success.\nRefID: ' + str(
-						req.json()['data']['ref_id']
-					))
-				elif t_status == 101:
-					return HttpResponse('Transaction submitted : ' + str(
-						req.json()['data']['message']
-					))
-				else:
-					return HttpResponse('Transaction failed.\nStatus: ' + str(
-						req.json()['data']['message']
-					))
-			else:
-				e_code = req.json()['errors']['code']
-				e_message = req.json()['errors']['message']
-				return HttpResponse(f"Error code: {e_code}, Error Message: {e_message}")
-		else:
-			return HttpResponse('Transaction failed or canceled by user')
+    ...
+    # TODO Payment Integration here.

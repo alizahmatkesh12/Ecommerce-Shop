@@ -10,12 +10,14 @@ from accounts.forms import (
     VerifyCodeForm,
     UserLoginForm,
     EditProfileForm,
+    AddressForm,
 )
 
 from accounts.models.users import User
 from accounts.models.otp_code import OtpCode
 from accounts.models.profiles import Profile
-
+from accounts.models.address import Address
+from orders.models import Order
 from accounts.utils import send_otp_code
 
 import random
@@ -132,12 +134,17 @@ class UserProfileView(LoginRequiredMixin, View):
 
     def get(self, request, user_id):
         profile = get_object_or_404(Profile, pk=user_id)
-
+        order = Order.objects.filter(user=user_id).first()
+        address = Address.objects.filter(user=profile.user)
         if request.user != profile.user:
             messages.error(request, "You do not have permission to view this profile.")
             return redirect("home:home")
 
-        return render(request, self.template_name, {"profile": profile})
+        return render(
+            request,
+            self.template_name,
+            {"profile": profile, "address": address, "order": order},
+        )
 
 
 class ProfileEditView(LoginRequiredMixin, View):
@@ -167,3 +174,57 @@ class ProfileEditView(LoginRequiredMixin, View):
             "There was an error updating your profile. Please correct the errors below.",
         )
         return render(request, self.template_name, {"form": form})
+
+
+class AddAddressView(LoginRequiredMixin, View):
+
+    def get(self, request):
+        form = AddressForm()
+        return render(request, "accounts/address.html", {"form": form})
+
+    def post(self, request):
+        form = AddressForm(request.POST)
+
+        if form.is_valid():
+            address = form.save(commit=False)
+            address.user = request.user
+            address.save()
+            return redirect("accounts:user_profile", user_id=request.user.id)
+
+        return render(request, "accounts/address.html", {"form": form})
+
+
+class EditAddressView(LoginRequiredMixin, View):
+    """
+    Provides a form to edit an existing address for the user.
+    """
+
+    def get(self, request, id):
+        address = get_object_or_404(Address, id=id, user=request.user)
+        form = AddressForm(instance=address)
+        return render(
+            request, "accounts/address.html", {"form": form, "address": address}
+        )
+
+    def post(self, request, id):
+        address = get_object_or_404(Address, id=id, user=request.user)
+        form = AddressForm(request.POST, instance=address)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "آدرس با موفقیت ویرایش شد.")
+            return redirect("accounts:user_profile", user_id=request.user.id)
+        return render(
+            request, "accounts/address.html", {"form": form, "address": address}
+        )
+
+
+class DeleteAddressView(LoginRequiredMixin, View):
+    """
+    Provides the functionality to delete an address.
+    """
+
+    def get(self, request, id):
+        address = get_object_or_404(Address, id=id, user=request.user)
+        address.delete()
+        messages.success(request, "آدرس با موفقیت حذف شد.")
+        return redirect("accounts:user_profile", user_id=request.user.id)

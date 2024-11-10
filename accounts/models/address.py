@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator
 
-from accounts.models.base import TimeStampedModel
+from accounts.models.abstract_model import TimeStampedModel
 
 
 class Address(TimeStampedModel):

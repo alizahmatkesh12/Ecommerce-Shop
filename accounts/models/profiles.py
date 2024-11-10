@@ -4,7 +4,11 @@ from django.dispatch import receiver
 from django.contrib.auth import get_user_model
 
 
-from accounts.models.base import TimeStampedModel
+from accounts.models.abstract_model import TimeStampedModel
+
+
+def profile_image_path(instance, filename):
+    return "profile/images/{}/{}".format(instance.user.username, filename)
 
 
 class Profile(TimeStampedModel):
@@ -17,7 +21,7 @@ class Profile(TimeStampedModel):
     )
     first_name = models.CharField(max_length=250)
     last_name = models.CharField(max_length=250)
-    image = models.ImageField(upload_to="accounts/", default="default-avatar.png")
+    image = models.ImageField(upload_to=profile_image_path, default="default-avatar.png")
     about = models.TextField(blank=True, null=True)
 
     def __str__(self):

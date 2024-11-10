@@ -1,7 +1,7 @@
 from django.db import models
 from django.utils import timezone
 
-from accounts.models.base import TimeStampedModel
+from accounts.models.abstract_model import TimeStampedModel
 
 
 class OtpCode(TimeStampedModel):
